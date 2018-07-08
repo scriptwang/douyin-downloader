@@ -1,0 +1,38 @@
+[base_config]
+
+#=====================[常改动]=====================
+# Douyin用户id
+user_id = 52554087366
+
+
+
+#=====================[不常改动]=====================
+#[不常改动] 下载路径,默认为defalut,即当前程序所在路径,可以是其他,比如D:douyin,注意:只能是defalut或者其他路径
+download_path = defalut
+
+#[不常改动] 请求等待时间因子
+timeout = 2
+
+#[不常改动] 是否用无头模式启动浏览器,只能是True或者False,默认为True
+headless = True
+
+#[不常改动] 单次请求喜欢视频的大小,默认21
+single_like_requests_value = 21
+
+#[不常改动] 请求发表视频最小等待时间(单位/秒)
+min_post_wait_time = 1
+
+#[不常改动] 请求发表视频最大等待时间(单位/秒)
+max_post_wait_time = 2
+
+#[不常改动] 请求喜欢视频最小等待时间(单位/秒)
+min_like_wait_time = 0.4
+
+#[不常改动] 请求喜欢视频最大等待时间(单位/秒)
+max_like_wait_time = 3.4
+
+#[不常改动] 请求下载视频最小等待时间(单位/秒)
+min_down_wait_time = 0.4
+
+#[不常改动] 请求下载视频最大等待时间(单位/秒)
+max_down_wait_time = 2.4

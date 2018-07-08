@@ -1,0 +1,14 @@
+{
+   "author": "ScriptWang",
+   "content_scripts": [ {
+      "all_frames": true,
+      "js": [ "js/app.js" ],
+      "matches": [ "\u003Call_urls>" ],
+      "run_at": "document_start"
+   }],
+   "web_accessible_resources": ["xmlhttp.js"],
+   "manifest_version": 2,
+   "name": "Hook-Ajax",
+   "permissions": [ "*://*/*", "downloads", "history", "storage" ],
+   "version": "0.0.1"
+}
