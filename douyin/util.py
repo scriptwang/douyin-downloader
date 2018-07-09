@@ -8,9 +8,11 @@ import math
 import datetime
 import os
 import configparser
+import logging
 from os import path
 from selenium import webdriver
 from selenium.webdriver.common.desired_capabilities import DesiredCapabilities
+from selenium.webdriver.remote.remote_connection import LOGGER
 from selenium.webdriver.chrome.options import Options
 from douyin.cons import *
 
@@ -51,6 +53,7 @@ def _init_browser(args,headless = True):
         chrome_options.add_argument('--disable-gpu')
     if 'extension_path' in args:
         chrome_options.add_extension(args['extension_path'])
+    LOGGER.setLevel(logging.WARNING)
     return webdriver.Chrome(executable_path=args['driver_path'],chrome_options=chrome_options)
 
 

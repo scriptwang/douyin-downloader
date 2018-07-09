@@ -14,8 +14,7 @@ download_path = defalut
 timeout = 2
 
 #[不常改动] 是否用无头模式启动浏览器,只能是True或者False,默认为True
-#!important 目前启用无头模式会有大量浏览器输出,暂时没找到解决方法,以后修复
-headless = False
+headless = True
 
 #[不常改动] 单次请求喜欢视频的大小,默认21
 single_like_requests_value = 21
