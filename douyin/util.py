@@ -34,8 +34,14 @@ def _read_config(config_path,_base_path_,args):
         if download_path == 'defalut':download_path = _base_path_
         timeout = float(config.get("base_config","timeout"))
         headless = config.get("base_config","headless")
-        if headless == 'False':headless = False
-        elif headless == 'True':headless = True
+        if headless == 'True':headless = True
+        else:headless = False
+        dpv = config.get("base_config","down_post_video")
+        if dpv == 'True':dpv = True
+        else:dpv = False
+        dlv = config.get("base_config","down_like_video")
+        if dlv == 'True':dlv = True
+        else:dlv = False
         slrv = config.get("base_config","single_like_requests_value")
         mipt = config.get("base_config","min_post_wait_time")
         mapt = config.get("base_config","max_post_wait_time")
@@ -44,7 +50,7 @@ def _read_config(config_path,_base_path_,args):
         midt = config.get("base_config","min_down_wait_time")
         madt = config.get("base_config","max_down_wait_time")
         return {'user_id':user_id,'download_path':download_path,'timeout':timeout,'headless':headless,
-        'slrv':slrv,'mipt':mipt,'mapt':mapt,'milt':milt,'malt':malt,'midt':midt,'madt':madt}
+        'dpv':dpv,'dlv':dlv,'slrv':slrv,'mipt':mipt,'mapt':mapt,'milt':milt,'malt':malt,'midt':midt,'madt':madt}
 
 def _init_browser(args,headless = True):
     chrome_options = Options()
@@ -53,7 +59,7 @@ def _init_browser(args,headless = True):
         chrome_options.add_argument('--disable-gpu')
     if 'extension_path' in args:
         chrome_options.add_extension(args['extension_path'])
-    LOGGER.setLevel(logging.WARNING)
+    LOGGER.setLevel(logging.ERROR)
     return webdriver.Chrome(executable_path=args['driver_path'],chrome_options=chrome_options)
 
 
@@ -194,7 +200,7 @@ def _download_video(_config_,_result_):
             with open(base_path + '/' + video_name,"wb") as file:
                 r = requests.get(video_url,headers = headers)
                 file.write(r.content)
-            print('第' + str(cnt) + '个' + flag + '视频已经下载!随机等待('+str(t)+'s) 文件为[' + video_name + ']')            
+            print('第' + str(cnt) + '个' + flag + '视频已经下载!随机等待('+str(t)+'s) 文件为[' + replace_filename(video_name,'_').encode('utf-8').decode('utf-8') + ']')
             cnt = cnt + 1
             return cnt
         headers = {'User-Agent':'Mozilla/5.0 (Windows NT 6.1; WOW64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/62.0.3202.75 Safari/537.36'}

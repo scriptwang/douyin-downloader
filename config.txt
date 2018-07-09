@@ -1,8 +1,14 @@
 [base_config]
 
 #=====================[常改动]=====================
-# Douyin用户id
+#Douyin用户id
 user_id = 52554087366
+
+#是否下载发表的视频,只能为True(下载)或者False(不下载)
+down_post_video = True
+
+#是否下载喜欢的视频,只能为True(下载)或者False(不下载)
+down_like_video = True
 
 
 
