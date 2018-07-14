@@ -32,7 +32,7 @@ rigister_function = '''
         var self = this;
         self.tmp = {};
         XMLHttpRequest.prototype.open = function(method, url, async, user, pass) {
-            if (url.indexOf('aweme/v1/aweme/post') != -1)  self.tmp.url = url;
+            if (url.indexOf('aweme/v1/aweme/') != -1)  self.tmp.url = url;
             open.call(this, method, url, async, user, pass);
         };
         XMLHttpRequest.prototype.send = function (data) {

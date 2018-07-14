@@ -15,8 +15,9 @@ from selenium.webdriver.common.desired_capabilities import DesiredCapabilities
 from selenium.webdriver.remote.remote_connection import LOGGER
 from selenium.webdriver.chrome.options import Options
 from douyin.cons import *
+from douyin.dbutil import *
 
-
+global _debug_
 
 def _read_config(config_path,_base_path_,args):
     def _get_user_id(user_id,args):
@@ -42,6 +43,9 @@ def _read_config(config_path,_base_path_,args):
         dlv = config.get("base_config","down_like_video")
         if dlv == 'True':dlv = True
         else:dlv = False
+        debug = config.get("base_config","debug")
+        if debug == 'True':debug = True
+        else:debug = False
         slrv = config.get("base_config","single_like_requests_value")
         mipt = config.get("base_config","min_post_wait_time")
         mapt = config.get("base_config","max_post_wait_time")
@@ -50,7 +54,8 @@ def _read_config(config_path,_base_path_,args):
         midt = config.get("base_config","min_down_wait_time")
         madt = config.get("base_config","max_down_wait_time")
         return {'user_id':user_id,'download_path':download_path,'timeout':timeout,'headless':headless,
-        'dpv':dpv,'dlv':dlv,'slrv':slrv,'mipt':mipt,'mapt':mapt,'milt':milt,'malt':malt,'midt':midt,'madt':madt}
+        'debug':debug,'dpv':dpv,'dlv':dlv,'slrv':slrv,'mipt':mipt,'mapt':mapt,'milt':milt,'malt':malt,
+        'midt':midt,'madt':madt}
 
 def _init_browser(args,headless = True):
     chrome_options = Options()
@@ -80,18 +85,21 @@ def _get_basic_info(browser,_config_,_result_):
         print(title + ':' + desc)
 
 
+
 # 拿到发表的视频,因为抖音有请求限制,所以用hook ajax请求的方式拿到数据
 def _get_post_request_data(browser,_config_,_result_):
     st = datetime.datetime.now()
     print('>>> 请求发表视频数据中(可能会比较慢).....')
     print('最小请求等待时间为:' + str(_config_['mipt']) +'s 最大请求等待时间为:' + str(_config_['mapt']) + 's')
     share_link = 'https://www.douyin.com/share/user/'+_config_['user_id']+'?share_type=link'
+    if _debug_ : print('请求连接:' + share_link)
     browser.get(share_link)
     time.sleep(float(_config_['timeout'])/2)
     browser.execute_script(rigister_function)
     browser.execute_script(show_like)
     post_btn = browser.find_element_by_xpath('//body/div/div[1]/div[3]/div/div[1]')
     post_btn.click()
+    time.sleep(float(_config_['timeout'])/1.2)
     # 滚动请求直到文档的底部
     is_bottom = False
     _len = 0
@@ -113,9 +121,44 @@ def _get_post_request_data(browser,_config_,_result_):
     print('请求用时:'+ str((et - st).seconds) + 's')
     return _len
 
+# 拿到喜欢的视频,因为抖音有请求限制,所以用hook ajax请求的方式拿到数据
+def _get_like_request_data(browser,_config_,_result_):
+    st = datetime.datetime.now()
+    print('>>> 请求喜欢视频数据中(可能会比较慢).....')
+    print('最小请求等待时间为:' + str(_config_['milt']) +'s 最大请求等待时间为:' + str(_config_['malt']) + 's')
+    share_link = 'https://www.douyin.com/share/user/'+_config_['user_id']+'?share_type=link'
+    if _debug_ : print('请求连接:' + share_link)
+    browser.get(share_link)
+    time.sleep(float(_config_['timeout'])/2)
+    browser.execute_script(rigister_function)
+    browser.execute_script(show_like)
+    post_btn = browser.find_element_by_xpath('//body/div/div[1]/div[3]/div/div[2]')
+    post_btn.click()
+    time.sleep(float(_config_['timeout'])/1.2)
+    # 滚动请求直到文档的底部
+    is_bottom = False
+    _len = 0
+    while (not is_bottom):
+        browser.execute_script('window.scrollTo(0,document.body.scrollHeight);')
+        t = random.randint(15,20)/10
+        if t < float(_config_['mipt']):t = float(_config_['mipt'])
+        if t > float(_config_['mapt']):t = float(_config_['mapt'])
+        time.sleep(t)
+        _len = int(browser.execute_script(' return window.resCnt()'))
+        print(str(_len) + '条喜欢视频数据已添加!(随机等待请求时间:' + str(t) + 's)' )
+        is_bottom = browser.execute_script(scroll_down)
+    browser.execute_script(final_ajax)
+    time.sleep(float(_config_['timeout'])/2)
+    _result_['like'] = browser.execute_script(' return window.finalRes')
+    _len = int(browser.execute_script(' return window.resCnt()'))
+    print(str(_len) + '条喜欢视频数据已添加!(随机等待请求时间:' + str(t) + 's)' )
+    et = datetime.datetime.now()
+    print('请求用时:'+ str((et - st).seconds) + 's')
+    return _len
+
 
 # 拿到发表的视频,因为抖音有请求限制,所以用hook ajax请求的方式拿到数据
-def _get_post_request_data2(browser,user_id,timeout,_result_):
+def _get_post_request_data_abandon(browser,user_id,timeout,_result_):
     share_link = 'https://www.douyin.com/share/user/'+user_id+'?share_type=link'
     browser.get(share_link)
     time.sleep(timeout/2)
@@ -136,7 +179,7 @@ def _get_post_request_data2(browser,user_id,timeout,_result_):
 
 
 # 拿到喜欢的视频
-def _get_like_request_data(_config_,_result_):
+def _get_like_request_data_abandon(_config_,_result_):
     def get_api(user_id,count,max_cursor):
         return 'https://www.douyin.com/aweme/v1/aweme/favorite/?user_id='+user_id+'&count='+count+'&max_cursor='+max_cursor
     def _replace(r):
@@ -182,14 +225,43 @@ def _get_like_request_data(_config_,_result_):
 
 
 
-def _download_video(_config_,_result_):
+def _download_video(_config_,_result_,_d_pool_,_c_):
     def replace_filename(nm,n):
         str = '?*:"<>\/|\\'
         for i in str:nm = nm.replace(i,n)
         nm = re.compile(u'[\uD800-\uDBFF][\uDC00-\uDFFF]').sub(n,nm)
         return nm
     def _download(flag,base_path): #flag is post or like
-        def _sub_sownload(j,cnt):
+        def _sub_sownload(j,cnt,flag):
+            def show_tip(cnt,flag,t,video_name,aweme_id,type):
+                try:
+                    if type == 0:
+                        v = exe_qry(_c_,"select video_name,download_time from douyin where aweme_id = '%s' and douyin_id= '%s' " %(aweme_id,_config_['user_id']))
+                        print('视频[' + str(v[0][0])+ ']已经下载过!下载时间:' + str(v[0][1]))
+                    elif type == 1:print('第' + str(cnt) + '个' + flag + '视频已经下载!随机等待('+str(t)+'s) 文件为[' + replace_filename(video_name,'_').encode('utf-8').decode('utf-8') + ']')
+                except Exception as x:
+                    # 一些标题含有特殊字符时候video_name会解码失败
+                    if type == 0:print('视频[' + str(x) + ']已经下载过!下载时间:' + str(exe_qry(_c_,"select download_time from douyin where aweme_id = '" + str(aweme_id) + "'")))
+                    elif type == 1:print('第' + str(cnt) + '个' + flag + '视频已经下载!随机等待('+str(t)+'s) 文件为['+ str(x) +']')
+            def down_insert(j,cnt,video_name):
+                exe_dml(_c_,"insert into douyin values (%s,'%s','%s','%s','%s','%s','%s',%s,'%s','%s',%s)" %(
+                    'NULL',
+                    j['statistics']['aweme_id'],
+                    _config_['user_id'],
+                    _result_['title'],
+                    j['video']['play_addr']['url_list'][0],
+                    flag,
+                    video_name,
+                    cnt,
+                    j['statistics']['digg_count'],
+                    '../' + replace_filename(_result_['title'],'-') + '/' + video_name,
+                    "datetime('now')"
+                ))
+
+
+            if j['statistics']['aweme_id'] in _d_pool_:
+                show_tip('','','',j['share_info']['share_desc'],j['statistics']['aweme_id'],0)
+                return cnt
             t = round(float(_config_['timeout'])/(abs(math.sin(cnt)) * 6),2)
             if t < float(_config_['midt']):t = float(_config_['midt'])
             if t > float(_config_['madt']):t = float(_config_['madt'])
@@ -200,21 +272,26 @@ def _download_video(_config_,_result_):
             with open(base_path + '/' + video_name,"wb") as file:
                 r = requests.get(video_url,headers = headers)
                 file.write(r.content)
-            print('第' + str(cnt) + '个' + flag + '视频已经下载!随机等待('+str(t)+'s) 文件为[' + replace_filename(video_name,'_').encode('utf-8').decode('utf-8') + ']')
+                show_tip(cnt,flag,t,video_name,'',1)
+                down_insert(j,cnt,video_name)
             cnt = cnt + 1
             return cnt
+
+
         headers = {'User-Agent':'Mozilla/5.0 (Windows NT 6.1; WOW64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/62.0.3202.75 Safari/537.36'}
-        cnt = 1
+        cnt = _d_pool_[flag]
         if flag not in _result_:return
         for i in _result_[flag]:
             if 'res' not in i or 'aweme_list' not in i['res']:continue
             for j in i['res']['aweme_list']:
                 try:
-                    cnt = _sub_sownload(j,cnt)
+                    cnt = _sub_sownload(j,cnt,flag)
                 except Exception as e:
                     print(e)
                     print('当前视频下载失败:[' + replace_filename(j['share_info']['share_desc'],'_') + ']')
         return cnt
+
+
     print('>>> 下载视频中... ...')
     print('最小请求等待时间为:' + str(_config_['midt']) +'s 最大请求等待时间为:' + str(_config_['madt']) + 's')
     base_path = _config_['download_path'] + '/' + replace_filename(_result_['title'],'-')
@@ -229,3 +306,11 @@ def _download_video(_config_,_result_):
         print('没有喜欢的视频可供下载...')
     else:l_len = _download('like',base_path)
     return {'p_len':p_len,'l_len':l_len}
+
+
+def _count_func(_result_,flag):
+    # flag maybe post or like
+    cnt = 0 
+    for i in _result_[flag]:
+        cnt = cnt + len(i['res']['aweme_list'])
+    print(cnt)

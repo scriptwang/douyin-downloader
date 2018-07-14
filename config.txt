@@ -2,7 +2,7 @@
 
 #=====================[常改动]=====================
 #Douyin用户id
-user_id = 52554087366
+user_id = 65413595875
 
 #是否下载发表的视频,只能为True(下载)或者False(不下载)
 down_post_video = True
@@ -10,17 +10,21 @@ down_post_video = True
 #是否下载喜欢的视频,只能为True(下载)或者False(不下载)
 down_like_video = True
 
+#[常改动] 是否启用debug模式,只能是True或者False,默认为False
+debug = False
+
+#[常改动] 是否用无头模式启动浏览器,只能是True或者False,默认为True
+headless = True
 
 
 #=====================[不常改动]=====================
-#[不常改动] 下载路径,默认为defalut,即当前程序所在路径,可以是其他,比如D:douyin,注意:只能是defalut或者其他路径
+
+#[不常改动] 下载路径,默认为defalut,即当前程序所在路径,可以是其他,比如D:/douyin/media,注意:只能是defalut或者其他路径
 download_path = defalut
+#download_path = D:/Media/抖音/
 
 #[不常改动] 请求等待时间因子
 timeout = 2
-
-#[不常改动] 是否用无头模式启动浏览器,只能是True或者False,默认为True
-headless = True
 
 #[不常改动] 单次请求喜欢视频的大小,默认21
 single_like_requests_value = 21
